@@ -1,0 +1,28 @@
+========================================================================
+ Boston, Massachusetts Surrounding Towns
+------------------------------------------------------------------------
+ https://koordinates.com/layer/96136-boston-massachusetts-surrounding-towns/
+========================================================================
+From: City of Boston, Massachusetts
+
+Description:
+  This layer is a component of
+  [BostonMA](http://gis.cityofboston.gov/arcgis/rest/services/Basemaps/base_map_webmercatorV2/MapServer?f=json).
+
+CRS: WGS 84 / Pseudo-Mercator
+
+------------------------------------------------------------------------
+ Processing steps applied by Koordinates
+------------------------------------------------------------------------
+
+- imported to Koordinates in Esri JSON format on 06 Sep 2018
+- 3 invalid geometries fixed at import time 
+    (see https://koordinates.com/layer/96136-boston-massachusetts-surrounding-towns/history/)
+- converted by Koordinates to Shapefile on 14 Mar 2022 (reference #2441001)
+
+====================
+No license specified
+====================
+
+No license was specified for this layer. This could mean default rights under copyright law for your legal jurisdiction may apply. Please check with Koordinates if you're unsure of your right to access and use this layer.
+
