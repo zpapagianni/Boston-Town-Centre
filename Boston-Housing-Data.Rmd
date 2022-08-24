@@ -1,5 +1,5 @@
 ---
-title: "\\Boston Housing Data "
+title: "Boston Housing Data "
 subtitle: "Spatial Distribution"
 output: html_document
 ---
@@ -24,20 +24,21 @@ register_google(key = "AIzaSyA-0NQyKizPR9jdAYCfTiyB5IhVfbdU2xI")
 ```
 
 ## Introduction
-According to the documentation(<https://search.r-project.org/CRAN/refmans/spData/html/boston.html>),this dataset contains housing data that was collected as part of the 1970 census of Boston, Massachusetts.The data frame has 506 rows and 20 columns and it contains the corrected data from the Harrison and Rubinfeld (1978) data.Each observation (row) in the dataset contains a collection of statistics corresponding to a single census ‘tract’ (a small geographic region containing multiple houses, defined specifically for a census). Some notes are that that MEDV is censored, in that median values at or over USD 50,000 are set to USD 50,000. 
+According to the documentation(<https://search.r-project.org/CRAN/refmans/spData/html/boston.html>),this dataset contains housing data that was collected as part of the 1970 census of Boston, Massachusetts.The corrected data from the Harrison and Rubinfeld (1978) are contained in a data frame, which is comprised by 506 rows and 20 columns.Each observation (row) in the dataset contains a collection of statistics corresponding to a single census ‘tract’ (a small geographic region containing multiple houses, defined specifically for a census). Some notes are that that MEDV is censored, in that median values at or over USD 50,000 are set to USD 50,000. 
 
-In this study we will consider the spatial distribution of the CMEDV variable. This variable corresponds to the median value (in USD 000s) of owner-occupied housing in each census tract. Each tract is also associated with a point location; geographic coordinates for this point (measured in decimal degrees latitude and longitude), as well as the town in which it is located (within the Greater Boston area), are provided for each observation.
+In this project we will consider the spatial distribution of the CMEDV variable. This variable corresponds to the median value (in USD 000s) of owner-occupied housing in each census tract. Each tract is also associated with a point location; geographic coordinates for this point (measured in decimal degrees latitude and longitude), as well as the town in which it is located (within the Greater Boston area), are provided for each observation.
 
 We are going to derive a smaller dataframe from the above data set that contains only the variables TOWN, LON, LAT and CMEDV:
 
-* TOWN a factor with levels given by town names.
+* TOWN a factor with levels given by town names.(92 towns)
 * LON a numeric vector of tract point longitudes in decimal degrees.
 * LAT a numeric vector of tract point latitudes in decimal degrees.
 * CMEDV a numeric vector of corrected median values of owner-occupied housing in USD 1000.
 
 
-### Analysis of data
-First, we read the boston data file from spData package in R and select the columns of interest. From Table 1, we can see that the variable TOWN is a factor with 92 levels. We also check for the existence of missing values. As we can observe in the table below there are no missing values to report in the data.
+## Analysis of data
+
+First, we read the boston data file from spData package in R and select the columns of interest. From the first table, shows the first rows of the data frame, while the second table shows the number of missing values.As we can observe, there are none and as a result we can move to the next step.
 ```{r,echo=FALSE}
 #Load data
 BostonData<-boston.c %>% select(TOWN, LON, LAT,CMEDV)
@@ -48,21 +49,22 @@ knitr::kable(head(BostonData,5), align = 'c',digits = 2,
   kableExtra::kable_styling(latex_options = "hold_position")
 #Check missing values
 knitr::kable(colSums(is.na(BostonData)), align = 'c', digits = 2,
-             caption = "Number of missing values") %>%
+             caption = "Number of missing values")  %>%
   kableExtra::kable_styling(latex_options = "hold_position")
 ```
 
 ## Visualisation
-We are going to visualize the coordinates using ggplot. We can see that we can't derive any information from the plot below so we will need to incorporate maps into our analysis. 
+
+First we create a scatter plot using the coordinates of each town and the median values of owner-occupied housing represented by color. 
 ```{r Fig1,echo=FALSE,fig.height = 5, fig.width = 15,fig.align='center',fig.cap="\\label{fig:fig1}Coordinates"}
-ggplot(data=BostonData,aes(x=LON,y=LAT,color=TOWN))+geom_point(show.legend = FALSE)+
+ggplot(data=BostonData,aes(x=LON,y=LAT,color=CMEDV))+geom_point(show.legend = TRUE)+
   ggtitle("Boston Tract coordinates")+
   xlab("Longtitude")+
   ylab('Latitude')+
   theme_bw()
 ```
 
-In the map below , we can already see that the points on the map representing the the latitudes and longitudes, are not matching the towns.
+Next to make the visualisation process easier, we include a map. In the figure below , we can see that the points representing the the latitudes and longitudes, are not matching the towns on the map.We can even observe in the second map that some towns appear to be on the water.
 ```{r ,echo=FALSE,warning=FALSE}
 #Contruct bounding box
 maxLong = max(BostonData$LON)
@@ -90,7 +92,6 @@ mapshot(m, file = "maps.png")
 knitr::include_graphics("maps.png")
 ```
 
-In order to be sure, we are going to zoom in and in fact we can clearly see that some of the towns appear on the water.
 ```{r, echo=FALSE, fig.cap="Coordinates on map", out.width = '70%',warning=FALSE}
 #Zoomed map
 zoom<-coord %>% filter(TOWN=='Beverly')
@@ -104,8 +105,7 @@ mapshot(mzoom, file = "mapszoom.png")
 knitr::include_graphics("mapszoom.png")
 ```
 
-Finally we analyse our data further by inspecting individual towns on Google Maps and in particular Cambridge. First we search for the right coordinates on Google Maps and add them to our map. The blue dot represents the correct coordinates, while the green dot shows the coordinates in our data. We can clearly see that there is a significant difference between the two. 
-
+The third map shows the right and wrong coordinates for Cambridge. 
 ```{r Cambridge map, echo=FALSE, fig.cap="Zoom on map", out.width = '70%',warning=FALSE}
 ##Compare towns
 cambridge<-BostonData[BostonData$TOWN=="Cambridge",] %>% select(LON, LAT,TOWN) 
@@ -113,19 +113,20 @@ cambridgemap<-leaflet() %>% addTiles() %>%
   addCircleMarkers(lat = 42.373611,lng = -71.110558, weight = 1,
              fillColor = 'blue',opacity = 0.5,color = 'blue',fillOpacity = 0.8) %>% 
   addCircleMarkers(data = cambridge,label = ~ TOWN,labelOptions = labelOptions(noHide = T),layerId = ~TOWN,fillColor = 'green',opacity = 0.5,color = 'green',fillOpacity = 0.8)
-cambridgemap
 
 mapshot(cambridgemap, file = "cambridgemap.png")
 knitr::include_graphics("cambridgemap.png")
 ```
 
 ## Coordinates correction
-In order to correct the data, we suppose that all coordinates are shifted by a certain amount. We assume that there are $n_j$  observations in town $j$, and for each observation $k$ in town $j$,we denote the longitudinal coordinate as  $x_{j,k} , k = 1,\dots, n_j $. Then we assume:
+
+In order to correct the data, we suppose that all coordinates are shifted by a certain amount. We assume that there are $n_j$  observations in town $j$, and for each observation $k$ in town $j$,we denote the longitudinal coordinate as  $x_{j,k} , k = 1,\dots, n_j$. Then we assume:
 
 $$ x_{j,k}=TC^{(x)}_j+\Delta^{(x)}_{j,k}$$
 where $TC^{(x)}_j$ is the longitudinal coordinate of the center of town j, and $\Delta^{(x)}_{j,k}$ is the displacement of observation $k$ in town $j$ from the town center.We also assume that the latitudinal coordinates (which we denote $y_{j,k}$) satisfy a similar relationship. The suggested systematic error is therefore such that $(TC^{(x)}_j ,TC^{(y)}_j)$ has been misspecified for $j = 1, \dots, n$ where n is the number of towns.
 
-To find the displacement, we are going to use the correct center coordinates for each town in Boston that exist in the file BostonTownCentres.csv. First we are going to have a quick look at the data. 
+To find the displacement, we are going to use the correct center coordinates for each town in Boston that exist in the file BostonTownCentres.csv. First we are going to have a quick look at the data.
+
 Note: We can see that the towns in this instance are of type character. 
 
 ```{r,echo=FALSE}
@@ -134,9 +135,9 @@ knitr::kable(head(centre.coord,5), align = 'c',
              caption = "Correct coordinates for each town in Boston") %>%
   kableExtra::kable_styling(latex_options = "hold_position")
 ```
-next we're using an appropriate mutating join to combine the two data sets.We check and observe that the number of columns in ``boston.c`` doesn't match the number of columns in the new data frame.We find that the missing data corresponds to Saugus, which is spelled as Sargus in boston.c. As a result, we correct the instances of Sargus and join the corrected data frame with BostonTownCentres.This time the column match.
+Next we're using an appropriate mutating join to combine the two data sets.We check and observe that the number of columns in ``boston.c`` doesn't match the number of columns in the new data frame.We find that the missing data corresponds to Saugus, which is spelled as Sargus in boston.c. As a result, we correct the instances of Sargus and join the corrected data frame with BostonTownCentres.This time the column match.
 
-```{r,echo=FALSE}
+```{r,echo=TRUE}
 #Join data frames
 join.coord<-centre.coord %>% left_join(BostonData, by=c('town'='TOWN'))
 #Check number of rows match
@@ -151,7 +152,8 @@ BostonData$TOWN[BostonData$TOWN=='Sargus']<-'Saugus'
 join.coord<-centre.coord %>% left_join(BostonData, by=c('town'='TOWN'))
 nrow(join.coord)==nrow(BostonData)
 ```
-Next we're going to visualise the correct coordinates.We can alredy observe that there are no points on water and they seem to match the towns on the map.
+
+Next we're going to visualize the correct coordinates.We can already observe that there are no points on water and they seem to match the towns on the map.
 
 ```{r, echo=FALSE, fig.cap="Correct coordinates on map", out.width = '70%',warning=FALSE}
 ##Extract bounds for map
@@ -170,6 +172,7 @@ mapshot(m.correct, file = "correctmap.png")
 
 knitr::include_graphics("correctmap.png")
 ```
+
 We're going to zoom into an area to check if everything is in order.
 ```{r, echo=FALSE, fig.cap="Zoom on correct coordinates on map", out.width = '70%',warning=FALSE}
 #Zoomed map
@@ -186,13 +189,14 @@ mapshot(mzoom.correct, file = "mapszoomcorrect.png")
 knitr::include_graphics("mapszoomcorrect.png")
 ```
 
-###Correct coordinates
+### Correct coordinates
+
 In order to fix our data set, we need replace the centroid for each town (i.e. for $j = 1,\dots,n$) of the $n_j$ boston.c locations with the true town center. 
 First, we are going to find the centroid in our dataset by grouping the data by town and finding the mean longitude and latitude.
 Then we calculate the displacement as so:
 $$x_{j,k}=TC^{(x)}_j+\Delta^{(x)}_{j,k} \Rightarrow \Delta^{(x)}_{j,k}=x_{j,k}-TC^{(x)}_j$$
 In the equation above, $x_{j,k}$ is known and is equal to the coordinates in boston.c and  $TC^{(x)}_j$ was calculated above as the mean lon and lat. After, we add the displacement of each town to the centroids contained in BostonTownCentres.csv and create a new dataframe containing two columns with the true coordinates for each observation. Hence we add to the above combined dataframe. 
-```{r, echo=FALSE, fig.cap="Final maps", out.width = '70%',warning=FALSE}
+```{r,echo=TRUE}
 #Calculate the centroid in old data set
 centroid<-BostonData %>% group_by(TOWN) %>% summarise(centre_lon=mean(LON),centre_lat=mean(LAT))
 #data frame for correct lon-lat
@@ -217,7 +221,9 @@ for (name in centroid$TOWN){
 
 #Combine the new data frame 
 join.coord<-cbind(join.coord,new_cord)
+```
 
+```{r, echo=FALSE, fig.cap="Final maps", out.width = '70%',warning=FALSE}
 #Create Map
 ##Extract bounds for map
 maxLong = max(join.coord$cor_lon)
@@ -230,7 +236,6 @@ m.final<-leaflet(data = join.coord) %>% addTiles() %>%
   fitBounds(minLong,minLat,maxLong,maxLat) %>% 
   addCircleMarkers(~cor_lon,~cor_lat,label = ~ town,labelOptions = labelOptions(noHide = T),
                    layerId= ~town,fillColor ='green',opacity = 0.5,color = 'red',fillOpacity = 1)
-m.final
 ##Save map
 mapshot(m.final, file = "finalmap.png")
 knitr::include_graphics("finalmap.png")
@@ -240,8 +245,6 @@ mzoom.correct<-leaflet() %>% addTiles() %>%
   setView(zoom$lon[1], zoom$lat[1], zoom = zoom_level) %>% 
   addCircleMarkers(data=join.coord,~cor_lon,~cor_lat,label = ~ town,labelOptions = labelOptions(noHide =T),
                    layerId = ~town,fillColor ='green',opacity = 0.5,color = 'red',fillOpacity =1)
-
-mzoom.correct
 mapshot(mzoom.correct, file = "finalmapszoom.png")
 
 #Visualise map
@@ -271,26 +274,3 @@ ggmap(Boston)+ geom_polygon(data = join.coord, aes(x = cor_lon, y = cor_lat, gro
   geom_text(data=mean_cmedv,aes(label = mc, x = mlon, y = mlat),size=3) 
 ```
 
-##  Choropleth map
-We are going to use the ``elect80`` data set which contains the Presidential election results of 1980 covering 3,107 US counties using geographical coordinates. 
-First of all, we are going to use the FIPS codes to find the exact state and county. We are going to use the ``county.fips`` function which is a database matching FIPS codes to maps package county and state names.After matching our two dataframes we drop the columns and keep the region and pc_turnout variables.
-To plot the outlines of a geographical region, we use ggplot2::map_data(). This will extract coordinate data from the maps library, to create a data frame containing the boundaries of one of a selection of geographical regions. Once we have the coordinates for the boundaries of our spatial regions, we can match this to the values of our spatial variable of interest using one of the ‘mutating joins’ from the dplyr library.
-
-```{r, echo=FALSE,out.width = '70%',warning=FALSE}
-##Choropleth map
-states_data<-us_states_df %>% select(state,median_income_10)
-states_data$state<-tolower(states_data$state)
-##States
-states_map <- map_data("state")
-fact_join <- states_map %>% left_join(states_data, by=c('region'='state'))
-#Visualise 
-ggplot(fact_join, aes(long, lat, group = group))+
-  geom_polygon(aes(fill = `median_income_10`), color = "white")+ theme_void()+
-  scale_fill_viridis(breaks=c(36000,34000,32000,30000,28000,26000,24000,22000,20000),
-                     guide = guide_legend(label.position = "right",title = 'Median Income', title.position = 'top', nrow=8))+
-  labs(title = "State-level median income across the United States",subtitle = "Reported in 2010") +
-    theme(text = element_text(color = "#22211d"),
-          legend.background = element_rect(fill = "#f5f5f2", color = NA),
-          plot.title = element_text(size= 14, hjust=0.01, color = "#4e4d47",
-                                    margin = margin(b = -0.1, t = 0.4, l = 2, unit = "cm")))
-```
