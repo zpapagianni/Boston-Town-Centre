@@ -6,15 +6,15 @@ Housing Data
 According to the
 documentation(<https://search.r-project.org/CRAN/refmans/spData/html/boston.html>),this
 dataset contains housing data that was collected as part of the 1970
-census of Boston, Massachusetts.The data frame has 506 rows and 20
-columns and it contains the corrected data from the Harrison and
-Rubinfeld (1978) data.Each observation (row) in the dataset contains a
+census of Boston, Massachusetts.The corrected data from the Harrison and
+Rubinfeld (1978) are contained in a data frame, which is comprised by
+506 rows and 20 columns.Each observation (row) in the dataset contains a
 collection of statistics corresponding to a single census ‘tract’ (a
 small geographic region containing multiple houses, defined specifically
 for a census). Some notes are that that MEDV is censored, in that median
 values at or over USD 50,000 are set to USD 50,000.
 
-In this study we will consider the spatial distribution of the CMEDV
+In this project we will consider the spatial distribution of the CMEDV
 variable. This variable corresponds to the median value (in USD 000s) of
 owner-occupied housing in each census tract. Each tract is also
 associated with a point location; geographic coordinates for this point
@@ -25,19 +25,19 @@ provided for each observation.
 We are going to derive a smaller dataframe from the above data set that
 contains only the variables TOWN, LON, LAT and CMEDV:
 
--   TOWN a factor with levels given by town names.
+-   TOWN a factor with levels given by town names.(92 towns)
 -   LON a numeric vector of tract point longitudes in decimal degrees.
 -   LAT a numeric vector of tract point latitudes in decimal degrees.
 -   CMEDV a numeric vector of corrected median values of owner-occupied
     housing in USD 1000.
 
-### Analysis of data
+## Analysis of data
 
 First, we read the boston data file from spData package in R and select
-the columns of interest. From Table 1, we can see that the variable TOWN
-is a factor with 92 levels. We also check for the existence of missing
-values. As we can observe in the table below there are no missing values
-to report in the data.
+the columns of interest. From the first table, shows the first rows of
+the data frame, while the second table shows the number of missing
+values.As we can observe, there are none and as a result we can move to
+the next step.
 <table>
 <caption>
 The first rows of the dataset, boston.c
@@ -182,44 +182,36 @@ CMEDV
 
 ## Visualisation
 
-We are going to visualize the coordinates using ggplot. We can see that
-we can’t derive any information from the plot below so we will need to
-incorporate maps into our analysis.
+First we create a scatter plot using the coordinates of each town and
+the median values of owner-occupied housing represented by color.
 <img src="Boston-Housing-Data_files/figure-gfm/Fig1-1.png" title="\label{fig:fig1}Coordinates" alt="\label{fig:fig1}Coordinates" style="display: block; margin: auto;" />
 
-In the map below , we can already see that the points on the map
-representing the the latitudes and longitudes, are not matching the
-towns.
+Next to make the visualisation process easier, we include a map. In the
+figure below , we can see that the points representing the the latitudes
+and longitudes, are not matching the towns on the map.We can even
+observe in the second map that some towns appear to be on the water.
 
     ## Assuming "lon" and "lat" are longitude and latitude, respectively
 
 <img src="maps.png" title="Coordinates on map" alt="Coordinates on map" width="70%" />
 
-In order to be sure, we are going to zoom in and in fact we can clearly
-see that some of the towns appear on the water.
-
     ## Assuming "lon" and "lat" are longitude and latitude, respectively
 
 <img src="mapszoom.png" title="Coordinates on map" alt="Coordinates on map" width="70%" />
 
-Finally we analyse our data further by inspecting individual towns on
-Google Maps and in particular Cambridge. First we search for the right
-coordinates on Google Maps and add them to our map. The blue dot
-represents the correct coordinates, while the green dot shows the
-coordinates in our data. We can clearly see that there is a significant
-difference between the two.
+The third map shows the right and wrong coordinates for Cambridge.
 
     ## Assuming "LON" and "LAT" are longitude and latitude, respectively
 
-<img src="Boston-Housing-Data_files/figure-gfm/Cambridge map-1.png" title="Zoom on map" alt="Zoom on map" width="70%" /><img src="cambridgemap.png" title="Zoom on map" alt="Zoom on map" width="70%" />
+<img src="cambridgemap.png" title="Zoom on map" alt="Zoom on map" width="70%" />
 
 ## Coordinates correction
 
 In order to correct the data, we suppose that all coordinates are
 shifted by a certain amount. We assume that there are *n*<sub>*j*</sub>
 observations in town *j*, and for each observation *k* in town *j*,we
-denote the longitudinal coordinate as $x\_{j,k} , k = 1,, n_j $. Then we
-assume:
+denote the longitudinal coordinate as
+*x*<sub>*j*, *k*</sub>, *k* = 1, …, *n*<sub>*j*</sub>. Then we assume:
 
 *x*<sub>*j*, *k*</sub> = *T**C*<sub>*j*</sub><sup>(*x*)</sup> + *Δ*<sub>*j*, *k*</sub><sup>(*x*)</sup>
 where *T**C*<sub>*j*</sub><sup>(*x*)</sup> is the longitudinal
@@ -236,8 +228,9 @@ towns.
 To find the displacement, we are going to use the correct center
 coordinates for each town in Boston that exist in the file
 BostonTownCentres.csv. First we are going to have a quick look at the
-data. Note: We can see that the towns in this instance are of type
-character.
+data.
+
+Note: We can see that the towns in this instance are of type character.
 
     ## Rows: 92 Columns: 3
 
@@ -326,38 +319,62 @@ Beverly
 </tbody>
 </table>
 
-next we’re using an appropriate mutating join to combine the two data
+Next we’re using an appropriate mutating join to combine the two data
 sets.We check and observe that the number of columns in `boston.c`
 doesn’t match the number of columns in the new data frame.We find that
 the missing data corresponds to Saugus, which is spelled as Sargus in
 boston.c. As a result, we correct the instances of Sargus and join the
 corrected data frame with BostonTownCentres.This time the column match.
 
+``` r
+#Join data frames
+join.coord<-centre.coord %>% left_join(BostonData, by=c('town'='TOWN'))
+#Check number of rows match
+nrow(join.coord)==nrow(BostonData)
+```
+
     ## [1] FALSE
+
+``` r
+##Find the town that's missing
+setdiff(unique(BostonData$TOWN), unique(join.coord$town))
+```
 
     ## [1] "Sargus"
 
+``` r
+#Empty dataframe to avoid duplicates
+join.coord<-NA
+##Correct missing values
+BostonData$TOWN[BostonData$TOWN=='Sargus']<-'Saugus'
+#Join correct data frames
+join.coord<-centre.coord %>% left_join(BostonData, by=c('town'='TOWN'))
+nrow(join.coord)==nrow(BostonData)
+```
+
     ## [1] TRUE
 
-Next we’re going to visualise the correct coordinates.We can alredy
+Next we’re going to visualize the correct coordinates.We can already
 observe that there are no points on water and they seem to match the
 towns on the map.
 
     ## Assuming "lon" and "lat" are longitude and latitude, respectively
 
 <img src="correctmap.png" title="Correct coordinates on map" alt="Correct coordinates on map" width="70%" />
+
 We’re going to zoom into an area to check if everything is in order.
 
     ## Assuming "lon" and "lat" are longitude and latitude, respectively
 
 <img src="Boston-Housing-Data_files/figure-gfm/unnamed-chunk-8-1.png" title="Zoom on correct coordinates on map" alt="Zoom on correct coordinates on map" width="70%" /><img src="mapszoomcorrect.png" title="Zoom on correct coordinates on map" alt="Zoom on correct coordinates on map" width="70%" />
 
-\###Correct coordinates In order to fix our data set, we need replace
-the centroid for each town (i.e. for *j* = 1, …, *n*) of the
-*n*<sub>*j*</sub> boston.c locations with the true town center. First,
-we are going to find the centroid in our dataset by grouping the data by
-town and finding the mean longitude and latitude. Then we calculate the
-displacement as so:
+### Correct coordinates
+
+In order to fix our data set, we need replace the centroid for each town
+(i.e. for *j* = 1, …, *n*) of the *n*<sub>*j*</sub> boston.c locations
+with the true town center. First, we are going to find the centroid in
+our dataset by grouping the data by town and finding the mean longitude
+and latitude. Then we calculate the displacement as so:
 *x*<sub>*j*, *k*</sub> = *T**C*<sub>*j*</sub><sup>(*x*)</sup> + *Δ*<sub>*j*, *k*</sub><sup>(*x*)</sup> ⇒ *Δ*<sub>*j*, *k*</sub><sup>(*x*)</sup> = *x*<sub>*j*, *k*</sub> − *T**C*<sub>*j*</sub><sup>(*x*)</sup>
 In the equation above, *x*<sub>*j*, *k*</sub> is known and is equal to
 the coordinates in boston.c and *T**C*<sub>*j*</sub><sup>(*x*)</sup> was
@@ -365,7 +382,35 @@ calculated above as the mean lon and lat. After, we add the displacement
 of each town to the centroids contained in BostonTownCentres.csv and
 create a new dataframe containing two columns with the true coordinates
 for each observation. Hence we add to the above combined dataframe.
-<img src="Boston-Housing-Data_files/figure-gfm/unnamed-chunk-9-1.png" title="Final maps" alt="Final maps" width="70%" /><img src="finalmap.png" title="Final maps" alt="Final maps" width="70%" /><img src="Boston-Housing-Data_files/figure-gfm/unnamed-chunk-9-3.png" title="Final maps" alt="Final maps" width="70%" /><img src="finalmapszoom.png" title="Final maps" alt="Final maps" width="70%" />
+
+``` r
+#Calculate the centroid in old data set
+centroid<-BostonData %>% group_by(TOWN) %>% summarise(centre_lon=mean(LON),centre_lat=mean(LAT))
+#data frame for correct lon-lat
+new_cord<-data.frame(cor_lon=as.double(),cor_lat=as.double) 
+
+##Loop through all names in centroid
+for (name in centroid$TOWN){
+  #Create a temporary data frame from our data containing the lon and lats of the town equal to name
+ temp<-BostonData %>% filter(TOWN==name)
+  #Create temporary data frames containing the wrong and correct cenrtoids of the town equal to name
+  temp.centre<-centroid %>% filter(TOWN==name)
+  cor.centroid<-centre.coord %>% filter(town==name)
+  #Calculate displacement for both lon-lat 
+  dislon<-temp$LON-temp.centre$centre_lon
+  dislat<-temp$LAT-temp.centre$centre_lat
+  #Calculate the right coordinates
+  cor_lon<-cor.centroid$lon+dislon
+  cor_lat<-dislat+cor.centroid$lat
+  #Add the right coordinates to our new dataframe 
+  new_cord<-rbind(new_cord, cbind(cor_lon,cor_lat))
+}
+
+#Combine the new data frame 
+join.coord<-cbind(join.coord,new_cord)
+```
+
+<img src="finalmap.png" title="Final maps" alt="Final maps" width="70%" /><img src="finalmapszoom.png" title="Final maps" alt="Final maps" width="70%" />
 
 ### Visualisation
 
@@ -377,4 +422,4 @@ polygons.
 
     ## Source : https://maps.googleapis.com/maps/api/staticmap?center=42.36008,-71.05888&zoom=10&size=640x640&scale=2&maptype=terrain&key=xxx-0NQyKizPR9jdAYCfTiyB5IhVfbdU2xI
 
-<img src="Boston-Housing-Data_files/figure-gfm/unnamed-chunk-10-1.png" width="70%" />
+<img src="Boston-Housing-Data_files/figure-gfm/unnamed-chunk-11-1.png" width="70%" />
