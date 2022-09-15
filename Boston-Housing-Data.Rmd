@@ -226,7 +226,9 @@ for (name in centroid$TOWN){
 #Combine the new data frame 
 join.coord<-cbind(join.coord,new_cord)
 ```
+
 The final map can be seen below.
+
 ```{r, echo=FALSE, out.width = '70%',warning=FALSE}
 #Create Map
 ##Extract bounds for map
