@@ -1,4 +1,4 @@
-Housing Data
+Boston Housing Data
 ================
 
 ## Introduction
@@ -31,7 +31,7 @@ contains only the variables TOWN, LON, LAT and CMEDV:
 -   CMEDV a numeric vector of corrected median values of owner-occupied
     housing in USD 1000.
 
-## Analysis of data
+## Exploratory Data Analysis
 
 First, we read the boston data file from spData package in R and select
 the columns of interest. From the first table, shows the first rows of
@@ -186,24 +186,28 @@ First we create a scatter plot using the coordinates of each town and
 the median values of owner-occupied housing represented by color.
 <img src="Boston-Housing-Data_files/figure-gfm/Fig1-1.png" title="\label{fig:fig1}Coordinates" alt="\label{fig:fig1}Coordinates" style="display: block; margin: auto;" />
 
-Next to make the visualisation process easier, we include a map. In the
-figure below , we can see that the points representing the the latitudes
-and longitudes, are not matching the towns on the map.We can even
-observe in the second map that some towns appear to be on the water.
+Next, we project the coordinates provided on a map, where we can see
+that the points representing the latitudes and longitudes, are not
+matching the towns on the map.
 
     ## Assuming "lon" and "lat" are longitude and latitude, respectively
 
-<img src="maps.png" title="Coordinates on map" alt="Coordinates on map" width="70%" />
+<img src="maps.png" width="70%" />
+
+The map below shows a closer view of the coordinates. We can observe
+that some of the towns appear to be on the water.
 
     ## Assuming "lon" and "lat" are longitude and latitude, respectively
 
-<img src="mapszoom.png" title="Coordinates on map" alt="Coordinates on map" width="70%" />
+<img src="mapszoom.png" width="70%" />
 
-The third map shows the right and wrong coordinates for Cambridge.
+Finally, we’re going to choose only one of the down districts and
+project the wrong and right coordinates on the map in order to assess
+how to correct the coordinates.
 
     ## Assuming "LON" and "LAT" are longitude and latitude, respectively
 
-<img src="cambridgemap.png" title="Zoom on map" alt="Zoom on map" width="70%" />
+<img src="cambridgemap.png" width="70%" />
 
 ## Coordinates correction
 
@@ -230,22 +234,18 @@ coordinates for each town in Boston that exist in the file
 BostonTownCentres.csv. First we are going to have a quick look at the
 data.
 
-Note: We can see that the towns in this instance are of type character.
-
     ## Rows: 92 Columns: 3
-
     ## ── Column specification ────────────────────────────────────────────────────────
     ## Delimiter: ","
     ## chr (1): town
     ## dbl (2): lat, lon
-
     ## 
     ## ℹ Use `spec()` to retrieve the full column specification for this data.
     ## ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.
 
 <table>
 <caption>
-Correct coordinates for each town in Boston
+Corrected coordinates for each town in Boston
 </caption>
 <thead>
 <tr>
@@ -322,9 +322,9 @@ Beverly
 Next we’re using an appropriate mutating join to combine the two data
 sets.We check and observe that the number of columns in `boston.c`
 doesn’t match the number of columns in the new data frame.We find that
-the missing data corresponds to Saugus, which is spelled as Sargus in
-boston.c. As a result, we correct the instances of Sargus and join the
-corrected data frame with BostonTownCentres.This time the column match.
+the missing data corresponds to a town named Saugus, which is spelled as
+Sargus in the original dataset. As a result, we correct the instances of
+Sargus and join the original data frame with BostonTownCentres.csv.
 
 ``` r
 #Join data frames
@@ -354,21 +354,21 @@ nrow(join.coord)==nrow(BostonData)
 
     ## [1] TRUE
 
-Next we’re going to visualize the correct coordinates.We can already
-observe that there are no points on water and they seem to match the
-towns on the map.
+The map below shows the correct coordinates.We can already observe that
+there are no points that get project on the water and the towns on the
+map and legends seem to match.
 
     ## Assuming "lon" and "lat" are longitude and latitude, respectively
 
-<img src="correctmap.png" title="Correct coordinates on map" alt="Correct coordinates on map" width="70%" />
+<img src="correctmap.png" width="70%" />
 
-We’re going to zoom into an area to check if everything is in order.
+The map below shows a closer view of the coordinates.
 
     ## Assuming "lon" and "lat" are longitude and latitude, respectively
 
-<img src="Boston-Housing-Data_files/figure-gfm/unnamed-chunk-8-1.png" title="Zoom on correct coordinates on map" alt="Zoom on correct coordinates on map" width="70%" /><img src="mapszoomcorrect.png" title="Zoom on correct coordinates on map" alt="Zoom on correct coordinates on map" width="70%" />
+<img src="Boston-Housing-Data_files/figure-gfm/unnamed-chunk-7-1.png" width="70%" /><img src="mapszoomcorrect.png" width="70%" />
 
-### Correct coordinates
+### Method of correction
 
 In order to fix our data set, we need replace the centroid for each town
 (i.e. for *j* = 1, …, *n*) of the *n*<sub>*j*</sub> boston.c locations
@@ -381,7 +381,7 @@ the coordinates in boston.c and *T**C*<sub>*j*</sub><sup>(*x*)</sup> was
 calculated above as the mean lon and lat. After, we add the displacement
 of each town to the centroids contained in BostonTownCentres.csv and
 create a new dataframe containing two columns with the true coordinates
-for each observation. Hence we add to the above combined dataframe.
+for each observation.
 
 ``` r
 #Calculate the centroid in old data set
@@ -410,9 +410,11 @@ for (name in centroid$TOWN){
 join.coord<-cbind(join.coord,new_cord)
 ```
 
-<img src="finalmap.png" title="Final maps" alt="Final maps" width="70%" /><img src="finalmapszoom.png" title="Final maps" alt="Final maps" width="70%" />
+The final map can be seen below.
 
-### Visualisation
+<img src="finalmap.png" width="70%" /><img src="finalmapszoom.png" width="70%" />
+
+### Median House Value Visualisation
 
 Finally, we construct a visualisation that shows the spatial
 distribution of the median value of owner-occupied housing in Greater
@@ -422,4 +424,11 @@ polygons.
 
     ## Source : https://maps.googleapis.com/maps/api/staticmap?center=42.36008,-71.05888&zoom=10&size=640x640&scale=2&maptype=terrain&key=xxx-0NQyKizPR9jdAYCfTiyB5IhVfbdU2xI
 
-<img src="Boston-Housing-Data_files/figure-gfm/unnamed-chunk-11-1.png" width="70%" />
+<img src="Boston-Housing-Data_files/figure-gfm/unnamed-chunk-10-1.png" width="70%" />
+
+### Discussion
+
+The resulting map lacks visual appeal. Another strategy would be to use
+the corrected coordinates to complete the visualisation in Tableau. In
+reality, Tableau automatically matches some coordinates with the names
+of the towns, which would have simplified the process.
