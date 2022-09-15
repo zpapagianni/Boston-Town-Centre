@@ -1,7 +1,10 @@
 ---
 title: "Boston Housing Data "
-subtitle: "Spatial Distribution"
-output: html_document
+subtitle: "Spatial Distribution and Coordinates Correction"
+output:
+  html_document:
+    toc: true
+  
 ---
 
 ```{r setup, include=FALSE}
@@ -18,7 +21,6 @@ library(ggmap)
 library(maps)
 library(mapview)
 library(leaflet)
-library(ggmap)
 library(viridis)
 register_google(key = "AIzaSyA-0NQyKizPR9jdAYCfTiyB5IhVfbdU2xI")
 ```
@@ -36,7 +38,7 @@ We are going to derive a smaller dataframe from the above data set that contains
 * CMEDV a numeric vector of corrected median values of owner-occupied housing in USD 1000.
 
 
-## Analysis of data
+## Exploratory Data Analysis
 
 First, we read the boston data file from spData package in R and select the columns of interest. From the first table, shows the first rows of the data frame, while the second table shows the number of missing values.As we can observe, there are none and as a result we can move to the next step.
 ```{r,echo=FALSE}
@@ -47,6 +49,7 @@ BostonData$TOWN<-as.character(BostonData$TOWN)
 knitr::kable(head(BostonData,5), align = 'c',digits = 2,
              caption = "The first rows of the dataset, boston.c") %>%
   kableExtra::kable_styling(latex_options = "hold_position")
+
 #Check missing values
 knitr::kable(colSums(is.na(BostonData)), align = 'c', digits = 2,
              caption = "Number of missing values")  %>%
@@ -64,7 +67,8 @@ ggplot(data=BostonData,aes(x=LON,y=LAT,color=CMEDV))+geom_point(show.legend = TR
   theme_bw()
 ```
 
-Next to make the visualisation process easier, we include a map. In the figure below , we can see that the points representing the the latitudes and longitudes, are not matching the towns on the map.We can even observe in the second map that some towns appear to be on the water.
+Next, we project the coordinates provided on a map, where we can see that the points representing the latitudes and longitudes, are not matching the towns on the map.
+
 ```{r ,echo=FALSE,warning=FALSE}
 #Contruct bounding box
 maxLong = max(BostonData$LON)
@@ -88,11 +92,13 @@ m<-leaflet() %>% addTiles() %>%
 mapshot(m, file = "maps.png")
 ```
 
-```{r, echo=FALSE, fig.cap="Coordinates on map", out.width = '70%',warning=FALSE}
+```{r, echo=FALSE, out.width = '70%',warning=FALSE}
 knitr::include_graphics("maps.png")
 ```
 
-```{r, echo=FALSE, fig.cap="Coordinates on map", out.width = '70%',warning=FALSE}
+The map below shows a closer view of the coordinates. We can observe that some of the towns appear to be on the water.
+
+```{r, echo=FALSE, out.width = '70%',warning=FALSE}
 #Zoomed map
 zoom<-coord %>% filter(TOWN=='Beverly')
 zoom_level<-12
@@ -105,8 +111,8 @@ mapshot(mzoom, file = "mapszoom.png")
 knitr::include_graphics("mapszoom.png")
 ```
 
-The third map shows the right and wrong coordinates for Cambridge. 
-```{r Cambridge map, echo=FALSE, fig.cap="Zoom on map", out.width = '70%',warning=FALSE}
+Finally, we're going to choose only one of the down districts and project the wrong and right coordinates on the map in order to assess how to correct the coordinates. 
+```{r Cambridge map, echo=FALSE, out.width = '70%',warning=FALSE}
 ##Compare towns
 cambridge<-BostonData[BostonData$TOWN=="Cambridge",] %>% select(LON, LAT,TOWN) 
 cambridgemap<-leaflet() %>% addTiles() %>%
@@ -126,16 +132,13 @@ $$ x_{j,k}=TC^{(x)}_j+\Delta^{(x)}_{j,k}$$
 where $TC^{(x)}_j$ is the longitudinal coordinate of the center of town j, and $\Delta^{(x)}_{j,k}$ is the displacement of observation $k$ in town $j$ from the town center.We also assume that the latitudinal coordinates (which we denote $y_{j,k}$) satisfy a similar relationship. The suggested systematic error is therefore such that $(TC^{(x)}_j ,TC^{(y)}_j)$ has been misspecified for $j = 1, \dots, n$ where n is the number of towns.
 
 To find the displacement, we are going to use the correct center coordinates for each town in Boston that exist in the file BostonTownCentres.csv. First we are going to have a quick look at the data.
-
-Note: We can see that the towns in this instance are of type character. 
-
-```{r,echo=FALSE}
+```{r,echo=FALSE,'show_col_types = FALSE'}
 centre.coord <- read_csv("BostonTownCentres.csv")
 knitr::kable(head(centre.coord,5), align = 'c',
-             caption = "Correct coordinates for each town in Boston") %>%
+             caption = "Corrected coordinates for each town in Boston") %>%
   kableExtra::kable_styling(latex_options = "hold_position")
 ```
-Next we're using an appropriate mutating join to combine the two data sets.We check and observe that the number of columns in ``boston.c`` doesn't match the number of columns in the new data frame.We find that the missing data corresponds to Saugus, which is spelled as Sargus in boston.c. As a result, we correct the instances of Sargus and join the corrected data frame with BostonTownCentres.This time the column match.
+Next we're using an appropriate mutating join to combine the two data sets.We check and observe that the number of columns in ``boston.c`` doesn't match the number of columns in the new data frame.We find that the missing data corresponds to a town named Saugus, which is spelled as Sargus in the original dataset. As a result, we correct the instances of Sargus and join the original data frame with BostonTownCentres.csv.
 
 ```{r,echo=TRUE}
 #Join data frames
@@ -153,9 +156,9 @@ join.coord<-centre.coord %>% left_join(BostonData, by=c('town'='TOWN'))
 nrow(join.coord)==nrow(BostonData)
 ```
 
-Next we're going to visualize the correct coordinates.We can already observe that there are no points on water and they seem to match the towns on the map.
+The map below shows the correct coordinates.We can already observe that there are no points that get project on the water and the towns on the map and legends seem to match.
 
-```{r, echo=FALSE, fig.cap="Correct coordinates on map", out.width = '70%',warning=FALSE}
+```{r, echo=FALSE,out.width = '70%',warning=FALSE}
 ##Extract bounds for map
 maxLong = max(centre.coord$lon)
 maxLat = max(centre.coord$lat)
@@ -173,8 +176,9 @@ mapshot(m.correct, file = "correctmap.png")
 knitr::include_graphics("correctmap.png")
 ```
 
-We're going to zoom into an area to check if everything is in order.
-```{r, echo=FALSE, fig.cap="Zoom on correct coordinates on map", out.width = '70%',warning=FALSE}
+The map below shows a closer view of the coordinates.
+
+```{r, echo=FALSE, out.width = '70%',warning=FALSE}
 #Zoomed map
 zoom<-centre.coord %>% filter(town=='Cambridge')
 zoom_level<-12
@@ -189,13 +193,13 @@ mapshot(mzoom.correct, file = "mapszoomcorrect.png")
 knitr::include_graphics("mapszoomcorrect.png")
 ```
 
-### Correct coordinates
+### Method of correction
 
 In order to fix our data set, we need replace the centroid for each town (i.e. for $j = 1,\dots,n$) of the $n_j$ boston.c locations with the true town center. 
 First, we are going to find the centroid in our dataset by grouping the data by town and finding the mean longitude and latitude.
 Then we calculate the displacement as so:
 $$x_{j,k}=TC^{(x)}_j+\Delta^{(x)}_{j,k} \Rightarrow \Delta^{(x)}_{j,k}=x_{j,k}-TC^{(x)}_j$$
-In the equation above, $x_{j,k}$ is known and is equal to the coordinates in boston.c and  $TC^{(x)}_j$ was calculated above as the mean lon and lat. After, we add the displacement of each town to the centroids contained in BostonTownCentres.csv and create a new dataframe containing two columns with the true coordinates for each observation. Hence we add to the above combined dataframe. 
+In the equation above, $x_{j,k}$ is known and is equal to the coordinates in boston.c and  $TC^{(x)}_j$ was calculated above as the mean lon and lat. After, we add the displacement of each town to the centroids contained in BostonTownCentres.csv and create a new dataframe containing two columns with the true coordinates for each observation. 
 ```{r,echo=TRUE}
 #Calculate the centroid in old data set
 centroid<-BostonData %>% group_by(TOWN) %>% summarise(centre_lon=mean(LON),centre_lat=mean(LAT))
@@ -222,8 +226,8 @@ for (name in centroid$TOWN){
 #Combine the new data frame 
 join.coord<-cbind(join.coord,new_cord)
 ```
-
-```{r, echo=FALSE, fig.cap="Final maps", out.width = '70%',warning=FALSE}
+The final map can be seen below.
+```{r, echo=FALSE, out.width = '70%',warning=FALSE}
 #Create Map
 ##Extract bounds for map
 maxLong = max(join.coord$cor_lon)
@@ -251,7 +255,7 @@ mapshot(mzoom.correct, file = "finalmapszoom.png")
 knitr::include_graphics("finalmapszoom.png")
 ```
 
-### Visualisation
+### Median House Value Visualisation
 Finally, we construct a visualisation that shows the spatial distribution of the median value of owner-occupied housing in Greater Boston in 1970. In this instance, we are going to use ggmap.We observe that for some towns have only one observation so we can't create polygons.  
 
 ```{r echo=FALSE, out.width = '70%',warning=FALSE}
@@ -274,3 +278,6 @@ ggmap(Boston)+ geom_polygon(data = join.coord, aes(x = cor_lon, y = cor_lat, gro
   geom_text(data=mean_cmedv,aes(label = mc, x = mlon, y = mlat),size=3) 
 ```
 
+### Discussion
+
+The resulting map lacks visual appeal. Another strategy would be to use the corrected coordinates to complete the visualisation in Tableau. In reality, Tableau automatically matches some coordinates with the names of the towns, which would have simplified the process.
