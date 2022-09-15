@@ -11,8 +11,7 @@ We are going to derive a smaller dataframe from the above data set that contains
 * LAT a numeric vector of tract point latitudes in decimal degrees.
 * CMEDV a numeric vector of corrected median values of owner-occupied housing in USD 1000.
 
-It has been suggested that the coordinates provided in boston.c contain a systematic error, with all observations in each town being mislocated by a fixed distance (in a fixed direction). As a result we need to correct the the coordinates.
-The corrected data from the Harrison and Rubinfeld (1978) are contained in a data frame, which is comprised by 506 rows and 20 columns.Each observation (row) in the dataset contains a collection of statistics corresponding to a single census ‘tract’ (a small geographic region containing multiple houses, defined specifically for a census). Some notes are that that MEDV is censored, in that median values at or over USD 50,000 are set to USD 50,000. 
+It has been suggested that the coordinates provided in boston.c contain a systematic error, with all observations in each town being mislocated by a fixed distance (in a fixed direction). As a result we are going to correct the the coordinates using the corrected data from the Harrison and Rubinfeld (1978) which is contained in a data frame comprised by 506 rows and 20 columns.Each observation (row) in the dataset contains a collection of statistics corresponding to a single census ‘tract’ (a small geographic region containing multiple houses, defined specifically for a census). Some notes are that that MEDV is censored, in that median values at or over USD 50,000 are set to USD 50,000. 
 
 The project is divided into two sections:
 * Exploratory data analysis
@@ -24,7 +23,8 @@ Here are the important files (the remaining files should be ignored):
 * [Boston-Housing-Data.md](./Boston-Housing-Data.md): The github markdown document which contain the detailed step of the above analysis.
 * [Boston-Housing-Data.Rmd](./Boston-Housing-Data.Rmd):The rmarkdown file that contains the detailed step of the spatial data analysis and correction.
 * [Boston-Housing-Data.R](./Boston-Housing-Data.R): Contains the code that was used for the analysis.
-* [boston_towns.csv](./boston_towns.csv): Input data.
+* [boston_towns.csv](./boston_towns.csv): boston.c, which is provided as part of the spData package in R.
+* [BostonTownCentres.csv](./BostonTownCentres.csv):Corrected data from the Harrison and Rubinfeld (1978)
 
 ## Environment
 
