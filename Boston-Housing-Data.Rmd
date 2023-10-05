@@ -2,9 +2,7 @@
 title: "Boston Housing Data "
 subtitle: "Spatial Distribution and Coordinates Correction"
 output:
-  html_document:
-    toc: true
-  
+  github_document
 ---
 
 ```{r setup, include=FALSE}
@@ -47,13 +45,11 @@ BostonData<-boston.c %>% select(TOWN, LON, LAT,CMEDV)
 BostonData$TOWN<-as.character(BostonData$TOWN)
 ##Glimpse
 knitr::kable(head(BostonData,5), align = 'c',digits = 2,
-             caption = "The first rows of the dataset, boston.c") %>%
-  kableExtra::kable_styling(latex_options = "hold_position")
+             caption = "The first rows of the dataset, boston.c")
 
 #Check missing values
 knitr::kable(colSums(is.na(BostonData)), align = 'c', digits = 2,
-             caption = "Number of missing values")  %>%
-  kableExtra::kable_styling(latex_options = "hold_position")
+             caption = "Number of missing values") 
 ```
 
 ## Visualisation
@@ -135,8 +131,7 @@ To find the displacement, we are going to use the correct center coordinates for
 ```{r,echo=FALSE,'show_col_types = FALSE'}
 centre.coord <- read_csv("BostonTownCentres.csv")
 knitr::kable(head(centre.coord,5), align = 'c',
-             caption = "Corrected coordinates for each town in Boston") %>%
-  kableExtra::kable_styling(latex_options = "hold_position")
+             caption = "Corrected coordinates for each town in Boston") 
 ```
 Next we're using an appropriate mutating join to combine the two data sets.We check and observe that the number of columns in ``boston.c`` doesn't match the number of columns in the new data frame.We find that the missing data corresponds to a town named Saugus, which is spelled as Sargus in the original dataset. As a result, we correct the instances of Sargus and join the original data frame with BostonTownCentres.csv.
 
